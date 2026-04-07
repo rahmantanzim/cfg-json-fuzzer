@@ -1,0 +1,30 @@
+# OS generated files (Mac)
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+venv/
+env/
+.venv/
+
+# Testing & Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+
+# Fuzzer Specific Data
+crashes/
+*.log
