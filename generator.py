@@ -9,7 +9,7 @@ class JSONGenerator:
         self.max_depth = max_depth
 
     def generate(self, symbol="<start>", current_depth=0):
-        # 1. Base Case: If it's a raw string/terminal, return it directly
+        # 1. Base Case: If it's a terminal, return it directly
         if not (symbol.startswith("<") and symbol.endswith(">")):
             return symbol
 
