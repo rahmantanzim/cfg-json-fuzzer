@@ -9,7 +9,7 @@ JSON_GRAMMAR = {
     # A JSON structure can be either an Object or an Array
     "<json>": ["<object>", "<array>"],
     
-    # Object definition: can be empty {} or contain key-value pairs { members }
+    # Object can be empty {} or contain key-value pairs { members }
     "<object>": [
         "{}", 
         "{ <members> }"

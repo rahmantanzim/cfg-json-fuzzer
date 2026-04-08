@@ -44,9 +44,7 @@ class JSONGenerator:
 
         expansion = random.choice(options)
 
-        # 4. PROPER AST EXPANSION (The actual fix)
-        # Instead of replacing strings blindly, we split the rule into tokens 
-        # and evaluate each token independently.
+        # 4.AST EXPANSION 
         parts = re.split(r'(<[^>]+>)', expansion)
         
         result = ""
@@ -66,7 +64,7 @@ if __name__ == "__main__":
     generator = JSONGenerator(JSON_GRAMMAR, max_depth=8)
     print("--- Generating Massive & Valid JSON ---")
     
-    for i in range(3):
+    for i in range(10):
         raw_json = generator.generate()
         print(f"\n[Sample {i+1}]: {raw_json}")
         
