@@ -6,7 +6,7 @@ from grammar import JSON_GRAMMAR
 class ASTNode:
     def __init__(self, symbol, children=None, value=None):
         self.symbol = symbol      # The grammar tag, e.g., "<object>" or "<number>"
-        self.children = children or [] # Child ASTNodes
+        self.children = children or [] # Child Abstract Syntax Tree nodes
         self.value = value        # Terminal string value (if it's a leaf node)
 
     def to_string(self):
@@ -42,31 +42,32 @@ class JSONGenerator:
 
         options = self.grammar.get(symbol, [symbol])
 
-        # 3. Smart Heuristics
+       # Smart Heuristics
+        # 1. Force nested structures early on
         if current_depth < 3 and symbol in ["<object>", "<array>"]:
             rich_options = [opt for opt in options if opt not in ["{}", "[]"]]
             if rich_options:
                 options = rich_options
 
-        if current_depth > 5 and symbol in ["<members>", "<elements>"]:
-            short_options = [opt for opt in options if "," not in opt]
-            if short_options:
-                options = short_options
-                # Force horizontal spread: Favor recursive lists if depth is low
-        if current_depth < 10 and symbol in ["<members>", "<elements>"]:
-            # Duplicate the recursive option to increase its probability of being chosen
-            recursive_options = [opt for opt in options if "," in opt]
-            if recursive_options:
-                options = options + recursive_options * 3 # 75% chance to keep growing
+        # 2. Control horizontal spread (array/object width)
+        if symbol in ["<members>", "<elements>"]:
+            if current_depth > 15:
+                # Cutoff: Force lists to terminate if we are too deep
+                short_options = [opt for opt in options if "," not in opt]
+                if short_options:
+                    options = short_options
+            elif current_depth < 5:
+                # Expansion: Multiply recursive choices (75% chance) to force wide structures
+                recursive_options = [opt for opt in options if "," in opt]
+                if recursive_options:
+                    options = options + recursive_options * 3
 
         expansion = random.choice(options)
 
-        # 4. AST EXPANSION (The Cleaned-Up Version)
+        # 4. AST EXPANSION
         node = ASTNode(symbol=symbol)
-        
         # Tokenize the expansion properly. 
         # This regex isolates tags <tag> and captures all literal characters in between.
-        # It's much safer than the previous split.
         tokens = re.findall(r'<[^>]+>|[^<]+', expansion)
         
         for token in tokens:
@@ -83,16 +84,14 @@ class JSONGenerator:
                     node.children.append(ASTNode(symbol="TERMINAL", value=clean_token))
 
         return node
-
-
-# Validation Block
+    
+# ******************** Validation Block  ********************
 if __name__ == "__main__":
-    generator = JSONGenerator(JSON_GRAMMAR, max_depth=8)
+    generator = JSONGenerator(JSON_GRAMMAR, max_depth=30)
     print("--- Generating Massive & Valid JSON ---")
     for i in range(10):
         ast_root = generator.generate()
         raw_json = ast_root.to_string() # Collapse the tree into a string
-        
         print(f"\n[Sample {i+1}]: {raw_json}")
         try:
             import json
