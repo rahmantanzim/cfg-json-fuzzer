@@ -75,10 +75,10 @@ python3 -m coverage html
 ## Campaign Metrics & Results
 Based on the latest automated fuzzing campaign:
 
-## Execution Speed: 5,000 payloads generated and tested in ~0.62 seconds.
+# Execution Speed: 5,000 payloads generated and tested in ~0.62 seconds.
 
-## Critical Crashes: Successfully triggered 1,095 RecursionError crashes (Denial of Service via Stack Exhaustion) against Python's native json.loads().
+# Critical Crashes: Successfully triggered 1,095 RecursionError crashes (Denial of Service via Stack Exhaustion) against Python's native json.loads().
 
-## System Defense: 1,378 payloads were safely rejected by the parser (JSONDecodeError), and 2,527 were parsed as valid.
+# System Defense: 1,378 payloads were safely rejected by the parser (JSONDecodeError), and 2,527 were parsed as valid.
 
-## Code Coverage: Achieved a highly robust 82% Overall Code Coverage (87% on the core fuzzer engine), successfully exploring the deepest exception-handling blocks.
+# Code Coverage: Achieved a highly robust 82% Overall Code Coverage (87% on the core fuzzer engine), successfully exploring the deepest exception-handling blocks.
