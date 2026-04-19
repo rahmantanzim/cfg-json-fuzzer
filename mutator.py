@@ -1,114 +1,99 @@
+
 import random
-import re
+from generator import ASTNode
 
 class JSONMutator:
     """
-    A deterministic mutator designed to apply specific stress-testing 
-    heuristics to valid JSON strings.
+    A semantic mutator that iterates an AST to apply targeted
+    stress-testing heuristics before string serialization.
     """
     def __init__(self):
         # 1. Extreme boundary values to test integer overflows and precision loss
         self.boundary_numbers = [
             "999999999999999999999999999999", 
-            "-999999999999999999999999999999", 
-            "2.2250738585072011e-308",  # Float min
+            "-999999999999999999999999999999",
+            "2.2250738585072011e-308", 
             "NaN", 
             "Infinity"
         ]
-        # 2. very weird data to test memory corruption or logic flaws
+        # 2. Very weird data to test memory corruption or logic flaws
         self.string_anomalies = [
-            "\"%s%n%x%d\"",          # Format string vulnerabilities
-            "\"" + "A" * 50600*(2-4-8-2-2) + "\"", # Buffer overflow simulation
-            "\"\\u0000\\u0001\"",    # Null byte injection
+            "\"%s%n%x%d\"",           # Format string
+            "\"" + "A"*5000 + "\"",   # Buffer overflow simulation
+            "\"\\u0000\\u0001\"",     # Null byte injection
             "null",
             "undefined"
         ]
 
-    def mutate(self, valid_json: str) -> str:
-        """Applies one random mutation strategy to the JSON string."""
-        strategies = [
-            self._mutate_numbers,
-            self._mutate_strings,
-            self._corrupt_structure,
-            self._force_nesting
-        ]
-        
-        # Pick a random strategy and execute
+    def _get_nodes(self, node: ASTNode, symbol: str):
+        """Recursively finds all nodes matching a specific grammar symbol."""
+        found = []
+        if node.symbol == symbol:
+            found.append(node)
+        for child in node.children:
+            found.extend(self._get_nodes(child, symbol))
+        return found
+
+    def mutate(self, ast_root: ASTNode) -> str:
+        """Applies one mutation strategy to the AST or serialized string."""
+        strategies = ["numbers", "strings", "structure", "nesting"]
         chosen_strategy = random.choice(strategies)
-        return chosen_strategy(valid_json)
 
-    def _mutate_numbers(self, json_str: str) -> str:
-        """Finds numbers in the JSON and replaces them with extreme boundaries."""
-        # Matches standalone digits/numbers in JSON values
-        number_pattern = re.compile(r'(?<=: )\d+(?=[,\n} ])|(?<=\[ )\d+(?=[,\n\] ])')
-        matches = number_pattern.findall(json_str)
-        
-        if not matches:
-            # Fallback to structure corruption if no numbers exist
-            return self._corrupt_structure(json_str)
-            
-        target = random.choice(matches)
-        anomaly = random.choice(self.boundary_numbers)
-        return json_str.replace(target, anomaly, 1)
+        # 1. Semantic Mutations (AST-Level)
+        if chosen_strategy == "numbers":
+            number_nodes = self._get_nodes(ast_root, "<number>")
+            if number_nodes:
+                target = random.choice(number_nodes)
+                # Mutate the terminal value inside the <number> node
+                if target.children:
+                    target.children[0].value = random.choice(self.boundary_numbers)
 
-    def _mutate_strings(self, json_str: str) -> str:
-        """Replaces valid string values with malicious payloads."""
-        # Matches string values (not keys)
-        string_pattern = re.compile(r'(?<=: )"[^"]*"(?=[,\n} ])|(?<=\[ )"[^"]*"(?=[,\n\] ])')
-        matches = string_pattern.findall(json_str)
-        
-        if not matches:
-            # Fallback to nesting if no strings exist
-            return self._force_nesting(json_str)
-            
-        target = random.choice(matches)
-        anomaly = random.choice(self.string_anomalies)
-        return json_str.replace(target, anomaly, 1)
+        elif chosen_strategy == "strings":
+            string_nodes = self._get_nodes(ast_root, "<string>")
+            if string_nodes:
+                target = random.choice(string_nodes)
+                if target.children:
+                    target.children[0].value = random.choice(self.string_anomalies)
 
-    def _corrupt_structure(self, json_str: str) -> str:
-        """Randomly deletes crucial structural tokens like commas or brackets (Empty Productions)."""
-        tokens_to_corrupt = [",", "{", "}", "[", "]", ":"]
-        target = random.choice(tokens_to_corrupt)
-        
-        # If the token exists, remove the first occurrence we find
-        if target in json_str:
-            return json_str.replace(target, "", 1)
+        # Serialize the AST into a string for the remaining string-level strategies
+        json_str = ast_root.to_string()
+
+        # 2. Syntax/Structural Mutations (String-Level)
+        if chosen_strategy == "structure":
+            tokens_to_corrupt = [",", "{", "}", "[", "]", ":"]
+            target = random.choice(tokens_to_corrupt)
+            if target in json_str:
+                json_str = json_str.replace(target, "", 1)
+
+        elif chosen_strategy == "nesting":
+            depth = random.randint(500, 1500)
+            if random.choice([True, False]):
+                prefix = '{"nested_key": ' * depth
+                suffix = '}' * depth
+            else:
+                prefix = '[' * depth
+                suffix = ']' * depth
+            json_str = f"{prefix}{json_str}{suffix}"
+
         return json_str
-
-    def _force_nesting(self, json_str: str) -> str:
-        """Wraps the JSON in an extreme number of arrays/objects to test recursion limits."""
-        # This will trigger RecursionError or Stack Overflow
-        depth = random.randint(500, 1500) 
-        
-        if random.choice([True, False]):
-            prefix = '{"nested_key": ' * depth
-            suffix = '}' * depth
-            return f"{prefix}{json_str}{suffix}"
-        else:
-            prefix = '[' * depth
-            suffix = ']' * depth
-            return f"{prefix}{json_str}{suffix}"
-
 # --- Quick Test Block ---
 if __name__ == "__main__":
+    from generator import JSONGenerator, JSON_GRAMMAR # Need these to generate an AST
+    
+    # 1. Setup
+    generator = JSONGenerator(JSON_GRAMMAR)
     mutator = JSONMutator()
-    sample_json = '{"key": 100, "data": "test"}'
     
-    print("Original:", sample_json)
-    print("\n--- Testing All 4 Strategies ---")
-    print("Numbers Mutated:", mutator._mutate_numbers(sample_json))
-    print("Strings Mutated:", mutator._mutate_strings(sample_json))
-    print("Structure Corrupted:", mutator._corrupt_structure(sample_json))
+    # 2. Generate a valid ASTNode instead of a raw string
+    ast_root = generator.generate()
+    original_json = ast_root.to_string()
     
-    # Just printing a snippet of the massive nested string so it doesn't flood your terminal
-    nested = mutator._force_nesting(sample_json)
-    print(f"Massive Nesting (Length: {len(nested)} chars):", nested[:50] + " ... " + nested[-50:])
-
-    #Sample output:
-    #python3 mutator.py
-    # Original: {"key": 100, "data": "test"}
-    # --- Testing All 4 Strategies ---
-    # Numbers Mutated: {"key": -999999999999999999999999999999, "data": "test"}
-    # Strings Mutated: {"key": 100, "data": "%s%n%x%d"}
-    # Structure Corrupted: {"key": 100, "data": "test"
-    # Massive Nesting (Length: 2132 chars): [[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[ ... ]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]
+    print("Original AST Serialization:", original_json)
+    
+    # 3. Test the unified mutation method
+    print("\n--- Testing Mutation Pipeline ---")
+    mutated_result = mutator.mutate(ast_root)
+    print("Mutated Result:", mutated_result)
+    
+    # Verify if it's still a valid string (unless it was a structure/nesting mutation)
+    print("\nNote: Valid JSON status depends on whether a 'structure' or 'nesting' mutation was chosen.")
