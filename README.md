@@ -79,3 +79,8 @@ Based on our latest 5,000-iteration automated fuzzing campaign targeting Python'
 5. **Code Coverage:** Achieved a highly robust 85% Overall Code Coverage across the fuzzer ecosystem (including 99% coverage on the core orchestrator and 100% on the grammar definitions).
 
 ---
+
+## Author
+Tanzim Rahman
+Siddiq Husain Tashfeen 
+Course: ENGI 9867 Advanced Computing Concepts for Engineering
