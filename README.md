@@ -69,7 +69,7 @@ Open `htmlcov/index.html` in your web browser to view the results.
 
 ## Campaign Metrics & Results
 
-Based on our latest 5,000-iteration automated fuzzing campaign targeting Python's native json.loads():
+Based on our latest 5,000-iteration automated fuzzing campaign targeting Python's native `json.loads()`:
 
 1. **Execution Speed:** 5,000 payloads generated, mutated, and executed natively in 0.89 seconds (7.10 seconds under full coverage instrumentation).
 2. **Syntactic Bypass:** 2,949 payloads parsed entirely successfully (proving the CFG bypassed the syntactic bottleneck).
@@ -80,7 +80,9 @@ Based on our latest 5,000-iteration automated fuzzing campaign targeting Python'
 
 ---
 
-## Author
-Tanzim Rahman
-Siddiq Husain Tashfeen 
-Course: ENGI 9867 Advanced Computing Concepts for Engineering
+## Authors
+
+* **Tanzim Rahman**
+* **Siddiq Husain Tashfeen**
+
+**Course:** ENGI 9867 Advanced Computing Concepts for Engineering
