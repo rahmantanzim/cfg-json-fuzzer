@@ -48,22 +48,22 @@ CFG-fuzzing/
 ## 📂 Installation & Setup
 
 1. **Clone the repository**
-git clone <your-repository-url>
-cd CFG-fuzzing
+`git clone <rahmantanzim/cfg-json-fuzzer>`
+`cd CFG-fuzzing`
 
 2. **Install dependencies**
-pip install -r requirements.txt
+`pip install -r requirements.txt`
 
 3. **Run the Fuzzer with Coverage Tracking:** To execute the fuzzer and track how much of the target system is explored:
-python3 -m coverage run fuzzer.py
+`python3 -m coverage run fuzzer.py`
 
 4. **View Terminal Metrics:** To view a quick breakdown of your statement coverage in the terminal:
-python3 -m coverage report -m
+`python3 -m coverage report -m`
 
 5. **Generate the Interactive Dashboard:** To generate a highly readable, line-by-line HTML coverage report:
-python3 -m coverage html
+`python3 -m coverage html`
 
-Open htmlcov/index.html in your web browser to view the results.
+Open `htmlcov/index.html` in your web browser to view the results.
 
 ---
 
