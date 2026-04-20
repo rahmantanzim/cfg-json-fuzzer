@@ -1,5 +1,6 @@
 
 import random
+import copy
 from generator import ASTNode
 
 class JSONMutator:
@@ -34,8 +35,9 @@ class JSONMutator:
             found.extend(self._get_nodes(child, symbol))
         return found
 
-    def mutate(self, ast_root: ASTNode) -> str:
+    def mutate(self, ast_og: ASTNode) -> str:
         """Applies one mutation strategy to the AST or serialized string."""
+        ast_root = copy.deepcopy(ast_og)
         strategies = ["numbers", "strings", "structure", "nesting"]
         chosen_strategy = random.choice(strategies)
 
